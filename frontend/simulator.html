@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Decision Simulator</title>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="dashboard-body">
+
+  <aside class="sidebar">
+
+    <div class="side-brand">
+      <div class="side-icon">🧠</div>
+
+      <div>
+        <h2>Smart Analyzer</h2>
+        <p>AI-Powered Insights</p>
+      </div>
+    </div>
+
+    <nav class="side-menu">
+      <a href="dashboard.html">▦ Dashboard</a>
+      <a href="simulator.html" class="active">◈ AI Simulator</a>
+      <a href="index.html">⌂ Home</a>
+    </nav>
+
+  </aside>
+
+  <main class="main-panel">
+
+    <header class="dashboard-header">
+
+      <div class="title-row">
+        <div class="app-logo">🧠</div>
+
+        <div>
+          <h1>AI Decision Simulator</h1>
+          <p>Simulate business decisions using AI logic</p>
+        </div>
+      </div>
+
+    </header>
+
+    <section class="simulator-hero">
+
+      <div class="simulator-left">
+
+        <div class="simulator-intro">
+          <span>AI Business Intelligence</span>
+
+          <h1>
+            Simulate Future
+            Business Decisions
+          </h1>
+
+          <p>
+            Change marketing, discounts, and customer growth
+            to predict future sales and profit impact using AI.
+          </p>
+        </div>
+
+        <div class="simulator-grid">
+
+          <div class="sim-card">
+            <label>Marketing Increase (%)</label>
+
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value="20"
+              id="marketingSlider"
+            >
+
+            <span id="marketingValue">20%</span>
+          </div>
+
+          <div class="sim-card">
+            <label>Discount Change (%)</label>
+
+            <input
+              type="range"
+              min="-50"
+              max="50"
+              value="10"
+              id="discountSlider"
+            >
+
+            <span id="discountValue">10%</span>
+          </div>
+
+          <div class="sim-card">
+            <label>Customer Growth (%)</label>
+
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value="15"
+              id="customerSlider"
+            >
+
+            <span id="customerValue">15%</span>
+          </div>
+
+        </div>
+
+        <button
+          class="simulate-btn big-simulate-btn"
+          onclick="runSimulation()"
+        >
+          Run AI Simulation
+        </button>
+
+      </div>
+
+      <div class="simulator-right">
+
+        <div class="simulation-results">
+
+          <div class="simulation-box">
+            <h4>Predicted Sales Impact</h4>
+            <h2 id="salesImpact">+0%</h2>
+          </div>
+
+          <div class="simulation-box">
+            <h4>Predicted Profit Impact</h4>
+            <h2 id="profitImpact">+0%</h2>
+          </div>
+
+          <div class="simulation-box big-box">
+            <h4>AI Recommendation</h4>
+
+            <p id="simulationAdvice">
+              Adjust parameters and run simulation.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+    <div class="simulation-box">
+  <h4>Base Avg Sales</h4>
+  <h2 id="baseSales">-</h2>
+</div>
+
+<div class="simulation-box">
+  <h4>Base Avg Profit</h4>
+  <h2 id="baseProfit">-</h2>
+</div>
+
+<div class="simulation-box">
+  <h4>Base Avg Discount</h4>
+  <h2 id="baseDiscount">-</h2>
+</div>
+
+<div class="simulation-box">
+  <h4>Customer Count</h4>
+  <h2 id="baseCustomers">-</h2>
+</div>
+
+  </main>
+
+  <script src="script.js"></script>
+
+</body>
+</html>

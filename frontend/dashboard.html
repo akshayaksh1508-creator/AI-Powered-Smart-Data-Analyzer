@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard | Smart Analyzer</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dashboard-body">
+
+  <aside class="sidebar">
+    <div class="side-brand">
+      <div class="side-icon">🧠</div>
+      <div>
+        <h2>Smart Analyzer</h2>
+        <p>AI-Powered Insights</p>
+      </div>
+    </div>
+
+    <nav class="side-menu">
+      <a href="#dashboard" class="active">▦ Dashboard</a>
+      <a href="#overview">▣ Data Overview</a>
+      <a href="simulator.html">◈ AI Simulator</a>
+      <a href="#insights">✦ Insights</a>
+      <a href="#visuals">▧ Visualizations</a>
+      <a href="#predictions">⌁ Predictions</a>
+      <a href="#recommendations">⚡ Recommendations</a>
+      <a href="#reports">▤ Reports</a>
+      <a href="#alerts">♢ Alerts</a>
+      <a href="index.html">⌂ Home</a>
+    </nav>
+
+    <div class="domain-card">
+      <p>Domain Detected</p>
+      <h3 id="sideDomain">General</h3>
+      <span>Confidence Score</span>
+      <strong id="confidenceText">0%</strong>
+      <div class="progress">
+        <div id="confidenceBar"></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-panel" id="dashboard">
+
+    <header class="dashboard-header">
+      <div class="title-row">
+        <div class="app-logo">🧠</div>
+        <div>
+          <h1>AI-Powered Smart Data Analyzer</h1>
+          <p>Excel → Insights → Predictions → Decisions</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="light-btn" onclick="openChat()">💬 Chat with Data</button>
+        <button class="light-btn" onclick="downloadReport()">⇩ Download Report</button>
+        <label class="purple-btn">
+          ⇩ Upload New File
+          <input type="file" id="fileInput" accept=".csv,.xlsx" hidden onchange="uploadFile()" />
+        </label>
+      </div>
+    </header>
+
+    <section class="upload-strip" id="overview">
+      <div class="file-box">
+        <div class="excel-icon">X</div>
+        <div>
+          <h3 id="fileName">Upload your dataset</h3>
+          <p id="uploadStatus">Choose CSV or Excel file</p>
+        </div>
+      </div>
+
+      <div class="file-meta">
+        <span>Rows</span>
+        <strong id="rows">-</strong>
+      </div>
+
+      <div class="file-meta">
+        <span>Columns</span>
+        <strong id="columns">-</strong>
+      </div>
+
+      <div class="file-meta">
+        <span>File Type</span>
+        <strong id="fileType">-</strong>
+      </div>
+
+      <div class="file-meta">
+        <span>Uploaded On</span>
+        <strong id="uploadedOn">-</strong>
+      </div>
+
+      <div class="clean-pill" id="cleanStatus">Waiting</div>
+    </section>
+
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon purple">₹</div>
+        <div>
+          <p>Numeric Columns</p>
+          <h2 id="numericCount">-</h2>
+          <span>Detected automatically</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon blue">▣</div>
+        <div>
+          <p>Duplicate Rows</p>
+          <h2 id="duplicates">-</h2>
+          <span>Removed from dataset</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon green">▤</div>
+        <div>
+          <p>Missing Values</p>
+          <h2 id="missing">-</h2>
+          <span>Fixed automatically</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon orange">⚠</div>
+        <div>
+          <p>Anomaly Status</p>
+          <h2 id="anomalyStatus">-</h2>
+          <span>Smart alert system</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="chart-grid" id="visuals">
+      <div class="panel large-panel">
+  <div class="panel-head chart-builder-head">
+    <h3>Data Trend</h3>
+
+    <div class="chart-controls">
+      <select id="chartType" onchange="updateDynamicChart()">
+        <option value="line">Line Chart</option>
+        <option value="bar">Bar Chart</option>
+        <option value="scatter">Scatter Plot</option>
+      </select>
+
+      <select id="xAxisSelect" onchange="updateDynamicChart()">
+        <option value="">X-Axis</option>
+      </select>
+
+      <select id="yAxisSelect" onchange="updateDynamicChart()">
+        <option value="">Y-Axis</option>
+      </select>
+    </div>
+  </div>
+
+  <canvas id="lineChart"></canvas>
+</div>
+
+      <div class="panel">
+        <h3>Category Distribution</h3>
+        <canvas id="barChart"></canvas>
+      </div>
+
+      <div class="panel">
+        <h3>Correlation Heatmap</h3>
+        <div id="heatmap" class="heatmap-placeholder">
+          Upload data to view relationships
+        </div>
+      </div>
+    </section>
+
+    <section class="content-grid">
+      <div class="panel" id="insights">
+        <h3>AI Insights</h3>
+        <div id="insightList" class="list-box"></div>
+        <button class="outline-btn">View All Insights</button>
+      </div>
+
+      <div class="panel prediction-panel" id="predictions">
+        <h3>Prediction</h3>
+        <canvas id="predictionChart"></canvas>
+
+        <div class="prediction-result">
+          <p>Predicted Next Value</p>
+          <h2 id="predictedValue">-</h2>
+          <span>Based on linear trend</span>
+        </div>
+      </div>
+      
+
+      <div class="panel" id="recommendations">
+        <h3>Top Recommendations</h3>
+        <div id="recommendationList" class="list-box"></div>
+        <button class="outline-btn">View All Recommendations</button>
+      </div>
+    </section>
+
+    <section class="bottom-grid">
+      <div class="panel" id="alerts">
+        <h3>Anomaly Detection</h3>
+        <p id="anomalyText">Upload a file to detect unusual values.</p>
+        <button class="outline-btn">View Anomalies</button>
+      </div>
+
+      <div class="panel">
+        <h3>🔔 Alerts</h3>
+        <p id="alertText">No alerts yet.</p>
+        <button class="outline-btn">View All Alerts</button>
+      </div>
+
+      <div class="panel" id="reports">
+        <h3>Quick Actions</h3>
+        <div class="quick-actions">
+          <button onclick="downloadCleaned()">⇩ Export Cleaned Data</button>
+          <button onclick="downloadReport()">⇩ Download Report</button>
+          <button onclick="downloadReport()">▧ Generate PDF Report</button>
+        </div>
+      </div>
+    </section>
+<div class="chatbot" id="chatbot">
+  <div class="chat-header">
+    <h3>AI Chat With Data</h3>
+    <button onclick="closeChat()">×</button>
+  </div>
+
+  <div class="chat-messages" id="chatMessages">
+    <div class="bot-message">
+      Hi! Ask me questions like: highest sales, average profit, top category, strongest correlation.
+    </div>
+  </div>
+
+  <div class="chat-input-area">
+    <input type="text" id="chatInput" placeholder="Ask about your data..." />
+    <button onclick="sendChatQuestion()">Send</button>
+  </div>
+</div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
