@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
+import os
 app = Flask(__name__)
 CORS(app)
 latest_df = None
@@ -716,5 +717,12 @@ def get_simulator_base(df):
     }
 
     return base_data
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+
+    app.run(
+        host="0.0.0.0",
+        port=port
+    )
