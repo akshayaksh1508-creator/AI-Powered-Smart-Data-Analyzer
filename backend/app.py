@@ -7,6 +7,7 @@ from sklearn.linear_model import LinearRegression
 app = Flask(__name__)
 CORS(app)
 latest_df = None
+<<<<<<< HEAD
 import os
  
 from dotenv import load_dotenv
@@ -27,6 +28,29 @@ genai.configure(
 )
 
 model = genai.GenerativeModel("gemini-2.0-flash")
+=======
+
+
+def clean_data(df):
+    cleaned_df = df.copy()
+
+    duplicates_removed = int(cleaned_df.duplicated().sum())
+    cleaned_df = cleaned_df.drop_duplicates()
+
+    missing_before = int(cleaned_df.isnull().sum().sum())
+
+    for col in cleaned_df.columns:
+        if pd.api.types.is_numeric_dtype(cleaned_df[col]):
+            cleaned_df[col] = cleaned_df[col].fillna(cleaned_df[col].mean())
+        else:
+            mode_val = cleaned_df[col].mode()
+            cleaned_df[col] = cleaned_df[col].fillna(mode_val[0] if not mode_val.empty else "Unknown")
+
+    missing_after = int(cleaned_df.isnull().sum().sum())
+
+    return cleaned_df, duplicates_removed, missing_before - missing_after
+
+>>>>>>> 539198ff1ae450bdf1aae0ee1b372fd52de5ca15
 
 def detect_domain(df):
     columns = " ".join(df.columns).lower()
@@ -404,6 +428,7 @@ def answer_data_question(df, question):
 @app.route("/")
 def home():
     return jsonify({"message": "Backend running"})
+<<<<<<< HEAD
 def clean_data(df):
     cleaned_df = df.copy()
 
@@ -442,6 +467,10 @@ def correlation_heatmap_data(df):
         "columns": numeric_cols,
         "matrix": corr.round(2).values.tolist()
     }
+=======
+
+
+>>>>>>> 539198ff1ae450bdf1aae0ee1b372fd52de5ca15
 @app.route("/analyze", methods=["POST"])
 def analyze():
     try:
@@ -473,7 +502,10 @@ def analyze():
         anomalies = detect_anomalies(cleaned_df)
         line_chart, bar_chart = chart_data(cleaned_df)
         prediction = prediction_data(cleaned_df)
+<<<<<<< HEAD
         heatmap_data = correlation_heatmap_data(cleaned_df)
+=======
+>>>>>>> 539198ff1ae450bdf1aae0ee1b372fd52de5ca15
         simulator_base = get_simulator_base(cleaned_df)
 
         safe_df = cleaned_df.replace([np.inf, -np.inf], np.nan)
@@ -494,7 +526,10 @@ def analyze():
             "columns": int(cleaned_df.shape[1]),
             "numeric_columns": len(numeric_cols),
             "domain": domain,
+<<<<<<< HEAD
             "heatmap_data": heatmap_data,
+=======
+>>>>>>> 539198ff1ae450bdf1aae0ee1b372fd52de5ca15
             "confidence": 92 if domain != "General" else 70,
             "duplicates_removed": int(duplicates_removed),
             "missing_values_fixed": int(missing_fixed),
@@ -514,6 +549,7 @@ def analyze():
     except Exception as e:
         print("UPLOAD ERROR:", e)
         return jsonify({"error": str(e)}), 500
+<<<<<<< HEAD
 
 def answer_data_question(df, question):
     question = question.lower().strip()
@@ -571,6 +607,8 @@ def answer_data_question(df, question):
         return "No major anomalies detected."
 
     return "Try asking: summary, rows, columns, averages, highest values, correlations, recommendations, or anomalies."
+=======
+>>>>>>> 539198ff1ae450bdf1aae0ee1b372fd52de5ca15
 @app.route("/chat", methods=["POST"])
 def chat_with_data():
     try:
@@ -589,6 +627,7 @@ def chat_with_data():
                 "answer": "Please enter a question."
             })
 
+<<<<<<< HEAD
         try:
             columns = ", ".join(latest_df.columns)
             sample_rows = latest_df.head(20).to_string()
@@ -622,11 +661,22 @@ Give a clear and useful answer.
             return jsonify({
                 "answer": answer
             })
+=======
+        answer = answer_data_question(latest_df, question)
+
+        return jsonify({
+            "answer": answer
+        })
+>>>>>>> 539198ff1ae450bdf1aae0ee1b372fd52de5ca15
 
     except Exception as e:
         return jsonify({
             "answer": f"Error: {str(e)}"
         }), 500
+<<<<<<< HEAD
+=======
+    
+>>>>>>> 539198ff1ae450bdf1aae0ee1b372fd52de5ca15
 def get_simulator_base(df):
     numeric_df = df.copy()
 

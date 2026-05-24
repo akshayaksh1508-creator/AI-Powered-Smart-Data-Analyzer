@@ -159,6 +159,7 @@ function drawCharts(data) {
   updateHeatmap(data);
 }
 
+<<<<<<< HEAD
 lineChartInstance = new Chart(ctx, {
   type: "line",
   data: {
@@ -179,6 +180,43 @@ lineChartInstance = new Chart(ctx, {
 ctx.onclick = () => {
   showChartInsight("Trend Chart", chartData);
 };
+=======
+function drawLineChart(chartData) {
+  const ctx = document.getElementById("lineChart");
+
+  if (lineChartInstance) {
+    lineChartInstance.destroy();
+  }
+
+  lineChartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: chartData.labels,
+      datasets: [{
+        label: "Trend",
+        data: chartData.values,
+        borderWidth: 3,
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
+>>>>>>> 539198ff1ae450bdf1aae0ee1b372fd52de5ca15
 function drawBarChart(chartData) {
   const ctx = document.getElementById("barChart");
 
@@ -206,9 +244,12 @@ function drawBarChart(chartData) {
     }
   });
 }
+<<<<<<< HEAD
 ctx.onclick = () => {
   showChartInsight("Category Distribution Chart", chartData);
 };
+=======
+>>>>>>> 539198ff1ae450bdf1aae0ee1b372fd52de5ca15
 
 function drawPredictionChart(prediction) {
   const ctx = document.getElementById("predictionChart");
@@ -255,12 +296,16 @@ function drawPredictionChart(prediction) {
     }
   });
 }
+<<<<<<< HEAD
 ctx.onclick = () => {
   showChartInsight("Prediction Chart", {
     labels: prediction.actual.map((_, index) => `Point ${index + 1}`),
     values: prediction.predicted
   });
 };
+=======
+
+>>>>>>> 539198ff1ae450bdf1aae0ee1b372fd52de5ca15
 function updateHeatmap(data) {
   const heatmap = document.getElementById("heatmap");
 
@@ -633,6 +678,7 @@ function runSimulation() {
       `Detected columns: Sales = ${base.sales_col || "Not found"}, Profit = ${base.profit_col || "Not found"}, Discount = ${base.discount_col || "Not found"}. Risk level is ${risk}.`;
   }
 }
+<<<<<<< HEAD
 function showChartInsight(chartName, chartData) {
 
   const popup =
@@ -910,4 +956,7 @@ function openAlerts() {
     "fullListPopup"
   ).style.display = "flex";
 }
+=======
+
+>>>>>>> 539198ff1ae450bdf1aae0ee1b372fd52de5ca15
 window.addEventListener("load", loadSimulatorBase);

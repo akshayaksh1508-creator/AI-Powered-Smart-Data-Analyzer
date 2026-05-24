@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 flask
 flask-cors
 pandas
@@ -8,3 +9,13 @@ gunicorn
 google-generativeai
 python-dotenv
 gunicorn
+=======
+streamlit
+pandas
+numpy
+matplotlib
+seaborn
+plotly
+scikit-learn
+openpyxl
+>>>>>>> 539198ff1ae450bdf1aae0ee1b372fd52de5ca15
