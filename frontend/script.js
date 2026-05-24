@@ -33,7 +33,7 @@ async function uploadFile() {
   try {
 
     const response = await fetch(
-      "http://127.0.0.1:5000/analyze",
+      "https://ai-powered-smart-data-analyzer-pgm6.onrender.com/analyze",
       {
         method: "POST",
         body: formData
@@ -522,7 +522,7 @@ async function sendChatQuestion() {
   messages.scrollTop = messages.scrollHeight;
 
   try {
-    const response = await fetch("http://127.0.0.1:5000/chat", {
+    const response = await fetch("https://ai-powered-smart-data-analyzer-pgm6.onrender.com/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
