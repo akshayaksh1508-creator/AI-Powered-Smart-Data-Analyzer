@@ -1011,7 +1011,7 @@ canvas {
   .big-box {
     grid-column: span 1;
   }
-<<<<<<< HEAD
+
 }
 .chart-ai-popup {
   position: fixed;
@@ -1118,7 +1118,4 @@ canvas {
 
 .full-list-box ul {
   padding-left: 22px;
-  line-height: 1.9;
-=======
->>>>>>> 539198ff1ae450bdf1aae0ee1b372fd52de5ca15
-}
+  line-height: 1.9;}
