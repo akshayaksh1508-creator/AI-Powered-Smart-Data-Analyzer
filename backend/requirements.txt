@@ -1,0 +1,10 @@
+flask
+flask-cors
+pandas
+numpy
+openpyxl
+scikit-learn
+gunicorn
+google-generativeai
+python-dotenv
+gunicorn
