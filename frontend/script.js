@@ -640,8 +640,10 @@ async function loadDatasetMemory() {
     document.getElementById("memoryCount").innerText =
       data.count || 0;
 
-    document.getElementById("memoryInsight").innerText =
-      data.insight || "No comparison available.";
+    document.getElementById("memoryInsight").innerHTML =
+  (data.insight || "No comparison available.")
+    .replace("Latest dataset:", "<strong>Latest dataset:</strong> ")
+    .replaceAll(". ", ".<br><br>• ");
 
     const memoryList = document.getElementById("memoryList");
     memoryList.innerHTML = "";
