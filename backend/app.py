@@ -655,7 +655,7 @@ def get_dataset_memory():
             })
 
         latest = memory[-1]
-
+        comparison_text = compare_with_previous_memory(latest)
         return jsonify({
             "count": len(memory),
             "insight": "Dataset memory loaded successfully. Latest remembered dataset is " + latest["file_name"],
