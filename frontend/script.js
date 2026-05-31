@@ -635,45 +635,39 @@ function getElement(id) {
   return document.getElementById(id);
 }
 async function loadDatasetMemory() {
-  const memoryInsight = document.getElementById("memoryInsight");
-  const memoryCount = document.getElementById("memoryCount");
-  const memoryList = document.getElementById("memoryList");
-
-  if (!memoryInsight || !memoryCount || !memoryList) return;
-
-  memoryInsight.innerText = "Loading dataset memory...";
-
   try {
     const response = await fetch("https://ai-powered-smart-data-analyzer-pgm6.onrender.com/memory");
-    console.log("Memory response status:", response.status);
     const data = await response.json();
-    console.log("Memory data:", data);
-    memoryCount.innerText = data.count;
-    memoryInsight.innerText = data.insight;
 
+    document.getElementById("memoryCount").innerText =
+      data.count || 0;
+
+    document.getElementById("memoryInsight").innerText =
+      data.insight || "No comparison available.";
+
+    const memoryList = document.getElementById("memoryList");
     memoryList.innerHTML = "";
 
-    data.memory.reverse().forEach(item => {
-      const div = document.createElement("div");
-      div.className = "memory-item";
+    (data.memory || [])
+      .slice()
+      .reverse()
+      .forEach(item => {
+        memoryList.innerHTML += `
+          <div class="memory-item">
+            <h3>${item.filename}</h3>
+            <p><strong>Uploaded:</strong> ${item.uploaded_at}</p>
+            <p><strong>Rows:</strong> ${item.rows}</p>
+            <p><strong>Columns:</strong> ${item.columns}</p>
+            <p><strong>Domain:</strong> ${item.domain}</p>
+          </div>
+        `;
+      });
 
-      div.innerHTML = `
-        <h3>${item.file_name}</h3>
-        <p><strong>Uploaded:</strong> ${item.uploaded_at}</p>
-        <p><strong>Rows:</strong> ${item.rows}</p>
-        <p><strong>Columns:</strong> ${item.columns}</p>
-        <p><strong>Domain:</strong> ${item.domain}</p>
-      `;
-
-      memoryList.appendChild(div);
-    });
-
- } catch (error) {
-  console.log("Memory error:", error);
-  memoryInsight.innerText = "Failed to load dataset memory.";
+  } catch (error) {
+    document.getElementById("memoryInsight").innerText =
+      "Failed to load dataset memory.";
+  }
 }
-
-window.addEventListener("load", loadDatasetMemory);
 function updateSliderValues() {
   const marketingSlider = getElement("marketingSlider");
   const discountSlider = getElement("discountSlider");
