@@ -41,6 +41,8 @@ async function uploadFile() {
     );
 
     const data = await response.json();
+    console.log("UPLOAD RESPONSE:", data);
+
 
     if (!response.ok) {
       throw new Error(
@@ -59,6 +61,30 @@ async function uploadFile() {
 
     // Fill dashboard
     fillDashboard(data);
+
+try {
+  setupDynamicChartBuilder(data);
+} catch (e) {
+  console.log("Chart builder error:", e);
+}
+
+try {
+  drawBarChart(data.bar_chart);
+} catch (e) {
+  console.log("Bar chart error:", e);
+}
+
+try {
+  drawPredictionChart(data.prediction);
+} catch (e) {
+  console.log("Prediction chart error:", e);
+}
+
+try {
+  updateHeatmap(data);
+} catch (e) {
+  console.log("Heatmap error:", e);
+}
 
     // Dynamic chart builder
     setupDynamicChartBuilder(data);
@@ -160,26 +186,8 @@ function drawCharts(data) {
 }
 
 
-lineChartInstance = new Chart(ctx, {
-  type: "line",
-  data: {
-    labels: chartData.labels,
-    datasets: [{
-      label: "Trend",
-      data: chartData.values,
-      borderWidth: 3,
-      tension: 0.4,
-      fill: true
-    }]
-  },
-  options: {
-    responsive: true
-  }
-});
 
-ctx.onclick = () => {
-  showChartInsight("Trend Chart", chartData);
-};
+
 
 function drawLineChart(chartData) {
   const ctx = document.getElementById("lineChart");
@@ -214,6 +222,9 @@ function drawLineChart(chartData) {
       }
     }
   });
+  ctx.onclick = () => {
+  showChartInsight("Trend Chart", chartData);
+};
 }
 
 
@@ -243,6 +254,9 @@ function drawBarChart(chartData) {
       }
     }
   });
+  ctx.onclick = () => {
+  showChartInsight("Category Distribution", chartData);
+};
 }
 
 
@@ -290,29 +304,99 @@ function drawPredictionChart(prediction) {
       }
     }
   });
-}
-
-ctx.onclick = () => {
+  ctx.onclick = () => {
   showChartInsight("Prediction Chart", {
     labels: prediction.actual.map((_, index) => `Point ${index + 1}`),
     values: prediction.predicted
   });
 };
 
+}
+
+
 
 
 function updateHeatmap(data) {
   const heatmap = document.getElementById("heatmap");
 
-  heatmap.innerHTML = `
-    <div>
-      <strong>Smart Relationship View</strong>
-      <p style="margin-top: 10px;">
-        Domain: ${data.domain}<br>
-        Correlation and relationship analysis completed.
-      </p>
-    </div>
-  `;
+  if (!heatmap) return;
+
+  if (!data || !data.heatmap_data) {
+    heatmap.innerHTML = "Heatmap data not available.";
+    return;
+  }
+
+  const rawColumns = data.heatmap_data.columns;
+  const rawMatrix = data.heatmap_data.matrix;
+
+  const columns = Array.isArray(rawColumns)
+    ? rawColumns
+    : Object.keys(rawColumns || {});
+
+  const matrix = Array.isArray(rawMatrix)
+    ? rawMatrix
+    : [];
+
+  if (columns.length < 2 || matrix.length === 0) {
+    heatmap.innerHTML = `
+      <div>
+        <strong>Not enough numeric columns</strong>
+        <p style="margin-top: 10px;">
+          Correlation heatmap needs at least 2 numeric columns.
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = `<div class="real-heatmap">`;
+
+  html += `<div class="heatmap-row heatmap-header-row">`;
+  html += `<div class="heatmap-label"></div>`;
+
+  columns.forEach((col) => {
+    html += `<div class="heatmap-header">${col}</div>`;
+  });
+
+  html += `</div>`;
+
+  matrix.forEach((row, i) => {
+    html += `<div class="heatmap-row">`;
+    html += `<div class="heatmap-label">${columns[i]}</div>`;
+
+    row.forEach((value) => {
+      const numberValue = Number(value);
+      const intensity = Math.min(Math.abs(numberValue), 1);
+
+      const color =
+        numberValue >= 0
+          ? `rgba(37, 99, 235, ${intensity})`
+          : `rgba(239, 68, 68, ${intensity})`;
+
+      html += `
+        <div
+          class="heatmap-cell"
+          style="background:${color}"
+          title="Correlation: ${numberValue}"
+        >
+          ${numberValue.toFixed(2)}
+        </div>
+      `;
+    });
+
+    html += `</div>`;
+  });
+
+  html += `</div>`;
+
+  heatmap.innerHTML = html;
+
+  heatmap.onclick = () => {
+    showChartInsight("Correlation Heatmap", {
+      labels: columns,
+      values: matrix.flat()
+    });
+  };
 }
 
 function scrollToSection(sectionId) {
@@ -550,7 +634,46 @@ let simulatorData = storedData ? JSON.parse(storedData) : null;
 function getElement(id) {
   return document.getElementById(id);
 }
+async function loadDatasetMemory() {
+  const memoryInsight = document.getElementById("memoryInsight");
+  const memoryCount = document.getElementById("memoryCount");
+  const memoryList = document.getElementById("memoryList");
 
+  if (!memoryInsight || !memoryCount || !memoryList) return;
+
+  memoryInsight.innerText = "Loading dataset memory...";
+
+  try {
+    const response = await fetch("https://ai-powered-smart-data-analyzer-pgm6.onrender.com/memory");
+
+    const data = await response.json();
+
+    memoryCount.innerText = data.count;
+    memoryInsight.innerText = data.insight;
+
+    memoryList.innerHTML = "";
+
+    data.memory.reverse().forEach(item => {
+      const div = document.createElement("div");
+      div.className = "memory-item";
+
+      div.innerHTML = `
+        <h3>${item.file_name}</h3>
+        <p><strong>Uploaded:</strong> ${item.uploaded_at}</p>
+        <p><strong>Rows:</strong> ${item.rows}</p>
+        <p><strong>Columns:</strong> ${item.columns}</p>
+        <p><strong>Domain:</strong> ${item.domain}</p>
+      `;
+
+      memoryList.appendChild(div);
+    });
+
+ } catch (error) {
+  console.log("Memory error:", error);
+  memoryInsight.innerText = "Failed to load dataset memory.";
+}
+
+window.addEventListener("load", loadDatasetMemory);
 function updateSliderValues() {
   const marketingSlider = getElement("marketingSlider");
   const discountSlider = getElement("discountSlider");
@@ -778,75 +901,8 @@ function closeChartInsight() {
     "chartAiPopup"
   ).style.display = "none";
 }
-function updateHeatmap(data) {
-  const heatmap = document.getElementById("heatmap");
 
-  if (
-    !data.heatmap_data ||
-    !data.heatmap_data.columns ||
-    data.heatmap_data.columns.length < 2
-  ) {
-    heatmap.innerHTML = `
-      <div>
-        <strong>Not enough numeric columns</strong>
-        <p style="margin-top: 10px;">
-          Correlation heatmap needs at least 2 numeric columns.
-        </p>
-      </div>
-    `;
-    return;
-  }
 
-  const columns = data.heatmap_data.columns;
-  const matrix = data.heatmap_data.matrix;
-
-  let html = `<div class="real-heatmap">`;
-
-  html += `<div class="heatmap-row heatmap-header-row">`;
-  html += `<div class="heatmap-label"></div>`;
-
-  columns.forEach(col => {
-    html += `<div class="heatmap-header">${col}</div>`;
-  });
-
-  html += `</div>`;
-
-  matrix.forEach((row, i) => {
-    html += `<div class="heatmap-row">`;
-    html += `<div class="heatmap-label">${columns[i]}</div>`;
-
-    row.forEach(value => {
-      const intensity = Math.abs(value);
-      const color =
-        value >= 0
-          ? `rgba(37, 99, 235, ${intensity})`
-          : `rgba(239, 68, 68, ${intensity})`;
-
-      html += `
-        <div
-          class="heatmap-cell"
-          style="background:${color}"
-          title="Correlation: ${value}"
-        >
-          ${value}
-        </div>
-      `;
-    });
-
-    html += `</div>`;
-  });
-
-  html += `</div>`;
-
-  heatmap.innerHTML = html;
-
-  heatmap.onclick = () => {
-    showChartInsight("Correlation Heatmap", {
-      labels: columns,
-      values: matrix.flat()
-    });
-  };
-}
 function openAllInsights() {
   if (!analysisData || !analysisData.insights) {
     alert("Please upload and analyze a dataset first.");
@@ -953,4 +1009,4 @@ function openAlerts() {
 }
 
 
-window.addEventListener("load", loadSimulatorBase);
+window.addEventListener("load", loadSimulatorBase);}

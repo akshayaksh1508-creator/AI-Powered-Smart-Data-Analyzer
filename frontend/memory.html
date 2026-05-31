@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dataset Memory | Smart Analyzer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="dashboard-body">
+
+  <aside class="sidebar">
+    <div class="side-brand">
+      <div class="side-icon">🧠</div>
+      <div>
+        <h2>Smart Analyzer</h2>
+        <p>Dataset Memory</p>
+      </div>
+    </div>
+
+    <nav class="side-menu">
+      <a href="dashboard.html">▦ Dashboard</a>
+      <a href="simulator.html">◈ AI Simulator</a>
+      <a href="memory.html" class="active">🧠 Dataset Memory</a>
+      <a href="index.html">⌂ Home</a>
+    </nav>
+  </aside>
+
+  <main class="main-panel">
+
+    <header class="dashboard-header">
+      <div class="title-row">
+        <div class="app-logo">🧠</div>
+        <div>
+          <h1>Self-Learning Dataset Memory</h1>
+          <p>Compare current uploads with previous dataset patterns</p>
+        </div>
+      </div>
+
+      <button class="light-btn" onclick="loadDatasetMemory()">
+        Refresh Memory
+      </button>
+    </header>
+
+    <section class="memory-hero">
+      <div class="memory-card">
+        <h2>Latest Dataset Comparison</h2>
+        <p id="memoryInsight">Loading memory insight...</p>
+      </div>
+
+      <div class="memory-card">
+        <h2>Total Datasets Remembered</h2>
+        <h1 id="memoryCount">0</h1>
+      </div>
+    </section>
+
+    <section class="memory-list-section">
+      <h2>Previous Dataset Memory</h2>
+      <div id="memoryList" class="memory-list"></div>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
