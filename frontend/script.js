@@ -645,9 +645,9 @@ async function loadDatasetMemory() {
 
   try {
     const response = await fetch("https://ai-powered-smart-data-analyzer-pgm6.onrender.com/memory");
-
+    console.log("Memory response status:", response.status);
     const data = await response.json();
-
+    console.log("Memory data:", data);
     memoryCount.innerText = data.count;
     memoryInsight.innerText = data.insight;
 
