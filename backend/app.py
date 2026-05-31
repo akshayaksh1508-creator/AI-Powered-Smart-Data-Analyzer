@@ -3,16 +3,18 @@ from flask_cors import CORS
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
-
+import joblib
 import os
+import json
+from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 latest_df = None
-
+chatbot_model = joblib.load("chatbot_model.pkl")
 import os
  
 from dotenv import load_dotenv
-import google.generativeai as genai
+
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -20,15 +22,9 @@ ENV_PATH = BASE_DIR / ".env"
 
 load_dotenv(dotenv_path=ENV_PATH)
 
-gemini_key = os.getenv("GEMINI_API_KEY")
 
-print("GEMINI FOUND:", bool(gemini_key))
 
-genai.configure(
-    api_key=gemini_key
-)
 
-model = genai.GenerativeModel("gemini-2.0-flash")
 
 
 
@@ -75,7 +71,9 @@ def generate_insights(df):
     recommendations = []
 
     numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
-    categorical_cols = df.select_dtypes(include=["object"]).columns.tolist()
+    categorical_cols = df.select_dtypes(
+    include=["object", "string"]
+).columns.tolist()
 
     for col in numeric_cols[:5]:
         avg = df[col].mean()
@@ -139,7 +137,7 @@ def detect_anomalies(df):
 
 def chart_data(df):
     numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
-    categorical_cols = df.select_dtypes(include=["object"]).columns.tolist()
+    categorical_cols = df.select_dtypes(include=["object", "string"]).columns.tolist()
 
     line_chart = {
         "labels": [],
@@ -469,7 +467,94 @@ def correlation_heatmap_data(df):
         "matrix": corr.round(2).values.tolist()
     }
 
+MEMORY_FILE = "dataset_memory.json"
 
+
+def load_memory():
+    try:
+        with open(MEMORY_FILE, "r") as file:
+            return json.load(file)
+    except:
+        return []
+
+def save_memory(memory):
+    safe_memory = make_json_safe(memory)
+
+    with open(MEMORY_FILE, "w") as file:
+        json.dump(safe_memory, file, indent=4)
+
+
+def create_dataset_memory(df, file_name, domain):
+    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+
+    numeric_summary = {}
+
+    for col in numeric_cols[:6]:
+        numeric_summary[col] = {
+            "mean": float(df[col].mean()),
+            "min": float(df[col].min()),
+            "max": float(df[col].max())
+        }
+
+    memory_item = {
+        "file_name": file_name,
+        "uploaded_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "rows": int(df.shape[0]),
+        "columns": int(df.shape[1]),
+        "domain": domain,
+        "numeric_summary": numeric_summary
+    }
+
+    return memory_item
+
+
+def compare_with_previous_memory(current_memory):
+    memory = load_memory()
+
+    if len(memory) == 0:
+        return "This is the first dataset stored in memory. Future uploads will be compared with this dataset."
+
+    previous = memory[-1]
+
+    insights = []
+
+    if previous["domain"] == current_memory["domain"]:
+        insights.append(
+            f"This dataset belongs to the same domain as the previous upload: {current_memory['domain']}."
+        )
+    else:
+        insights.append(
+            f"Domain changed from {previous['domain']} to {current_memory['domain']}."
+        )
+
+    common_cols = set(previous["numeric_summary"].keys()).intersection(
+        set(current_memory["numeric_summary"].keys())
+    )
+
+    for col in list(common_cols)[:3]:
+        old_mean = previous["numeric_summary"][col]["mean"]
+        new_mean = current_memory["numeric_summary"][col]["mean"]
+
+        if old_mean != 0:
+            change = ((new_mean - old_mean) / old_mean) * 100
+
+            if change > 0:
+                insights.append(
+                    f"Average {col} improved by {change:.2f}% compared to the previous upload."
+                )
+            elif change < 0:
+                insights.append(
+                    f"Average {col} decreased by {abs(change):.2f}% compared to the previous upload."
+                )
+            else:
+                insights.append(
+                    f"Average {col} remained stable compared to the previous upload."
+                )
+
+    if not insights:
+        return "Dataset memory stored successfully, but no matching numeric columns were found for comparison."
+
+    return " ".join(insights)
 
 
 @app.route("/analyze", methods=["POST"])
@@ -496,9 +581,17 @@ def analyze():
         global latest_df
         latest_df = cleaned_df.copy()
         numeric_cols = cleaned_df.select_dtypes(include=np.number).columns.tolist()
-        categorical_cols = cleaned_df.select_dtypes(include=["object"]).columns.tolist()
+        categorical_cols = cleaned_df.select_dtypes(
+    include=["object", "string"]
+).columns.tolist()
 
         domain = detect_domain(cleaned_df)
+        current_memory = create_dataset_memory(cleaned_df, file.filename, domain)
+        memory_insight = compare_with_previous_memory(current_memory)
+
+        memory = load_memory()
+        memory.append(current_memory)
+        save_memory(memory)
         insights, recommendations = generate_insights(cleaned_df)
         anomalies = detect_anomalies(cleaned_df)
         line_chart, bar_chart = chart_data(cleaned_df)
@@ -538,7 +631,9 @@ def analyze():
             "prediction": prediction,
             "chart_columns": chart_columns,
             "chart_dataset": chart_dataset,
-            "simulator_base": simulator_base
+            "simulator_base": simulator_base,
+            "memory_insight": memory_insight,
+            "heatmap_data": heatmap_data
         }
 
         return jsonify(make_json_safe(response_data))
@@ -547,7 +642,30 @@ def analyze():
         print("UPLOAD ERROR:", e)
         return jsonify({"error": str(e)}), 500
 
+@app.route("/memory", methods=["GET"])
+def get_dataset_memory():
+    try:
+        memory = make_json_safe(load_memory())
 
+        if len(memory) == 0:
+            return jsonify({
+                "count": 0,
+                "insight": "No dataset memory found yet. Upload a dataset first.",
+                "memory": []
+            })
+
+        latest = memory[-1]
+
+        return jsonify({
+            "count": len(memory),
+            "insight": "Dataset memory loaded successfully. Latest remembered dataset is " + latest["file_name"],
+            "memory": memory
+        })
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
 def answer_data_question(df, question):
     question = question.lower().strip()
 
@@ -604,7 +722,70 @@ def answer_data_question(df, question):
         return "No major anomalies detected."
 
     return "Try asking: summary, rows, columns, averages, highest values, correlations, recommendations, or anomalies."
+def ml_chat_answer(df, question):
+    intent = chatbot_model.predict([question])[0]
 
+    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+    categorical_cols = df.select_dtypes(include=["object"]).columns.tolist()
+
+    if intent == "summary":
+        return f"The dataset contains {df.shape[0]} rows and {df.shape[1]} columns. Detected domain is {detect_domain(df)}."
+
+    if intent == "rows":
+        return f"The dataset contains {df.shape[0]} rows."
+
+    if intent == "columns":
+        return "Columns: " + ", ".join(df.columns)
+
+    if intent == "average":
+        if numeric_cols:
+            col = numeric_cols[0]
+            return f"The average value of {col} is {df[col].mean():.2f}."
+
+    if intent == "maximum":
+        if numeric_cols:
+            col = numeric_cols[0]
+            return f"The highest value of {col} is {df[col].max():.2f}."
+
+    if intent == "minimum":
+        if numeric_cols:
+            col = numeric_cols[0]
+            return f"The lowest value of {col} is {df[col].min():.2f}."
+
+    if intent == "correlation":
+        if len(numeric_cols) >= 2:
+            corr = df[numeric_cols].corr().abs()
+            np.fill_diagonal(corr.values, 0)
+            pair = corr.stack().idxmax()
+            score = corr.stack().max()
+            return f"The strongest relationship is between {pair[0]} and {pair[1]} with correlation {score:.2f}."
+        return "Not enough numeric columns to calculate correlation."
+
+    if intent == "anomaly":
+        anomalies = detect_anomalies(df)
+        return " ".join(anomalies)
+
+    if intent == "recommendation":
+        return "Focus on improving weak-performing areas, reducing anomalies, and analyzing highly correlated columns."
+
+    if intent == "trend":
+        if numeric_cols:
+            col = numeric_cols[0]
+            first = df[col].iloc[0]
+            last = df[col].iloc[-1]
+
+            if last > first:
+                return f"{col} shows an increasing trend."
+            elif last < first:
+                return f"{col} shows a decreasing trend."
+            else:
+                return f"{col} appears stable."
+
+    if intent == "prediction":
+        prediction = prediction_data(df)
+        return f"The predicted next value is {prediction['next_value']}."
+
+    return "I can answer questions about summary, rows, columns, average, maximum, minimum, correlation, anomaly, trend, prediction, and recommendation."
 @app.route("/chat", methods=["POST"])
 def chat_with_data():
     try:
@@ -623,47 +804,11 @@ def chat_with_data():
                 "answer": "Please enter a question."
             })
 
-
-        try:
-            columns = ", ".join(latest_df.columns)
-            sample_rows = latest_df.head(20).to_string()
-
-            prompt = f"""
-You are an AI Data Analyst assistant.
-
-Answer using this uploaded dataset.
-
-Columns:
-{columns}
-
-Sample rows:
-{sample_rows}
-
-Question:
-{question}
-
-Give a clear and useful answer.
-"""
-
-            response = model.generate_content(prompt)
-
-            return jsonify({
-                "answer": response.text
-            })
-
-        except Exception:
-            answer = answer_data_question(latest_df, question)
-
-            return jsonify({
-                "answer": answer
-            })
-
-        answer = answer_data_question(latest_df, question)
+        answer = ml_chat_answer(latest_df, question)
 
         return jsonify({
             "answer": answer
         })
-
 
     except Exception as e:
         return jsonify({

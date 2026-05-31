@@ -1,0 +1,72 @@
+question,intent
+summarize this dataset,summary
+give dataset summary,summary
+describe this data,summary
+explain uploaded dataset,summary
+give overview of data,summary
+what is this dataset about,summary
+how many rows are there,rows
+total rows,rows
+number of records,rows
+count records,rows
+how many columns are there,columns
+show column names,columns
+list all columns,columns
+what fields are present,columns
+what is the average value,average
+show mean value,average
+average sales,average
+average profit,average
+what is the highest value,maximum
+maximum sales,maximum
+highest profit,maximum
+largest value,maximum
+what is the lowest value,minimum
+minimum sales,minimum
+lowest profit,minimum
+smallest value,minimum
+show correlation,correlation
+which columns are related,correlation
+relationship between columns,correlation
+which factor affects sales,correlation
+show anomalies,anomaly
+detect outliers,anomaly
+any unusual values,anomaly
+find abnormal values,anomaly
+give recommendation,recommendation
+what should improve,recommendation
+suggest improvements,recommendation
+give business suggestions,recommendation
+show trend,trend
+what trend is present,trend
+is sales increasing,trend
+show data pattern,trend
+predict future value,prediction
+forecast sales,prediction
+what will happen next,prediction
+future prediction,prediction
+show column names,columns
+list all columns,columns
+what are the columns,columns
+display columns,columns
+column names,columns
+what fields are present,columns
+show all fields,columns
+list dataset columns,columns
+which columns are there,columns
+give column names,columns
+tell me the columns,columns
+show dataset columns,columns
+what is total sales,total
+sum of profit,total
+calculate total value,total
+median salary,median
+what is median value,median
+standard deviation,std
+show standard deviation,std
+which department appears most,top
+top category,top
+most common region,top
+give top insights,insight
+show important insights,insight
+what are key findings,insight

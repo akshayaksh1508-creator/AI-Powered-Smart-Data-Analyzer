@@ -8,3 +8,4 @@ gunicorn
 google-generativeai
 python-dotenv
 gunicorn
+joblib
