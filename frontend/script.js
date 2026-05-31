@@ -1003,4 +1003,4 @@ function openAlerts() {
 }
 
 
-window.addEventListener("load", loadSimulatorBase);}
+window.addEventListener("load", loadSimulatorBase);
