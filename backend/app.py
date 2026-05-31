@@ -645,30 +645,64 @@ def analyze():
 @app.route("/memory", methods=["GET"])
 def get_dataset_memory():
     try:
-        memory = load_memory()
+        memory = make_json_safe(load_memory())
 
         if not memory:
             return jsonify({
                 "count": 0,
-                "insight": "No dataset memory found yet.",
+                "insight": "No dataset memory found yet. Upload a dataset first.",
                 "memory": []
             })
 
         latest = memory[-1]
 
-        insight = f"""
-Compared with previous uploads:
+        if len(memory) == 1:
+            insight = (
+                f"This is the first dataset stored in memory: {latest['file_name']}. "
+                "Upload another dataset to compare patterns."
+            )
+        else:
+            previous = memory[-2]
+            insights = []
 
-Latest dataset: {latest["filename"]}
+            insights.append(
+                f"Latest dataset: {latest['file_name']}"
+            )
 
-Domain: {latest["domain"]}
+            if previous["domain"] == latest["domain"]:
+                insights.append(
+                    f"This dataset belongs to the same domain as the previous upload: {latest['domain']}."
+                )
+            else:
+                insights.append(
+                    f"Domain changed from {previous['domain']} to {latest['domain']}."
+                )
 
-Rows: {latest["rows"]}
+            common_cols = set(previous["numeric_summary"].keys()).intersection(
+                set(latest["numeric_summary"].keys())
+            )
 
-Columns: {latest["columns"]}
+            for col in list(common_cols)[:3]:
+                old_mean = previous["numeric_summary"][col]["mean"]
+                new_mean = latest["numeric_summary"][col]["mean"]
 
-AI detected pattern similarity with previous uploads.
-""".strip()
+                if old_mean:
+                    change = ((new_mean - old_mean) / old_mean) * 100
+
+                    if change > 0:
+                        insights.append(
+                            f"Average {col} improved by {change:.2f}% compared to the previous upload."
+                        )
+                    elif change < 0:
+                        insights.append(
+                            f"Average {col} decreased by {abs(change):.2f}% compared to the previous upload."
+                        )
+                    else:
+                        insights.append(
+                            f"Average {col} remained stable."
+                        )
+
+            insight = " ".join(insights)
 
         return jsonify({
             "count": len(memory),
@@ -678,7 +712,9 @@ AI detected pattern similarity with previous uploads.
 
     except Exception as e:
         return jsonify({
-            "error": str(e)
+            "count": 0,
+            "insight": f"Memory error: {str(e)}",
+            "memory": []
         }), 500
 def answer_data_question(df, question):
     question = question.lower().strip()
