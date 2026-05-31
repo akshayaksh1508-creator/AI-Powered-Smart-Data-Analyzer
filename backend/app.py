@@ -467,7 +467,9 @@ def correlation_heatmap_data(df):
         "matrix": corr.round(2).values.tolist()
     }
 
-MEMORY_FILE = "dataset_memory.json"
+BASE_DIR = Path(__file__).resolve().parent
+
+MEMORY_FILE = BASE_DIR / "dataset_memory.json"
 
 
 def load_memory():
@@ -481,7 +483,13 @@ def save_memory(memory):
     safe_memory = make_json_safe(memory)
 
     with open(MEMORY_FILE, "w") as file:
-        json.dump(safe_memory, file, indent=4)
+        json.dump(
+            safe_memory,
+            file,
+            indent=4
+        )
+
+    print("MEMORY SAVED:", len(memory))
 
 
 def create_dataset_memory(df, file_name, domain):
