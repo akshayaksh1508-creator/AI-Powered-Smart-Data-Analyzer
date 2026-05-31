@@ -87,16 +87,14 @@ try {
 }
 
     // Dynamic chart builder
-    setupDynamicChartBuilder(data);
+    
 
     // Other charts
-    drawBarChart(data.bar_chart);
+    
 
-    drawPredictionChart(
-      data.prediction
-    );
+    
 
-    updateHeatmap(data);
+    
 
     uploadStatus.innerText =
       "File uploaded successfully";
@@ -654,7 +652,7 @@ async function loadDatasetMemory() {
       .forEach(item => {
         memoryList.innerHTML += `
           <div class="memory-item">
-            <h3>${item.filename}</h3>
+            <h3>${item.file_name}</h3>
             <p><strong>Uploaded:</strong> ${item.uploaded_at}</p>
             <p><strong>Rows:</strong> ${item.rows}</p>
             <p><strong>Columns:</strong> ${item.columns}</p>
@@ -1003,4 +1001,6 @@ function openAlerts() {
 }
 
 
+window.addEventListener("load", loadSimulatorBase);
+window.addEventListener("load", loadDatasetMemory);
 window.addEventListener("load", loadSimulatorBase);
