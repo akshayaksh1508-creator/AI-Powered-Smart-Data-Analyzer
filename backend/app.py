@@ -946,11 +946,24 @@ def answer_data_question(df, question):
 def ml_chat_answer(df, question):
     intent = chatbot_model.predict([question])[0]
 
+    q = question.lower().strip()
+
     numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
-    categorical_cols = df.select_dtypes(include=["object"]).columns.tolist()
+    categorical_cols = df.select_dtypes(include=["object", "string"]).columns.tolist()
+
+    def find_numeric_column():
+        for col in numeric_cols:
+            if col.lower() in q:
+                return col
+        return numeric_cols[0] if numeric_cols else None
 
     if intent == "summary":
-        return f"The dataset contains {df.shape[0]} rows and {df.shape[1]} columns. Detected domain is {detect_domain(df)}."
+        return (
+            f"The uploaded dataset contains {df.shape[0]} rows and "
+            f"{df.shape[1]} columns. "
+            f"Detected domain is {detect_domain(df)}. "
+            f"Columns are: {', '.join(df.columns)}."
+        )
 
     if intent == "rows":
         return f"The dataset contains {df.shape[0]} rows."
@@ -959,19 +972,47 @@ def ml_chat_answer(df, question):
         return "Columns: " + ", ".join(df.columns)
 
     if intent == "average":
-        if numeric_cols:
-            col = numeric_cols[0]
+        col = find_numeric_column()
+        if col:
             return f"The average value of {col} is {df[col].mean():.2f}."
 
     if intent == "maximum":
-        if numeric_cols:
-            col = numeric_cols[0]
+        col = find_numeric_column()
+        if col:
             return f"The highest value of {col} is {df[col].max():.2f}."
 
     if intent == "minimum":
-        if numeric_cols:
-            col = numeric_cols[0]
+        col = find_numeric_column()
+        if col:
             return f"The lowest value of {col} is {df[col].min():.2f}."
+
+    if intent == "total":
+        col = find_numeric_column()
+        if col:
+            return f"The total value of {col} is {df[col].sum():.2f}."
+
+    if intent == "median":
+        col = find_numeric_column()
+        if col:
+            return f"The median value of {col} is {df[col].median():.2f}."
+
+    if intent == "std":
+        col = find_numeric_column()
+        if col:
+            return f"The standard deviation of {col} is {df[col].std():.2f}."
+
+    if intent == "top":
+        for col in categorical_cols:
+            if col.lower() in q:
+                value = df[col].value_counts().idxmax()
+                count = int(df[col].value_counts().max())
+                return f"The most common value in {col} is {value}, appearing {count} times."
+
+        if categorical_cols:
+            col = categorical_cols[0]
+            value = df[col].value_counts().idxmax()
+            count = int(df[col].value_counts().max())
+            return f"The most common value in {col} is {value}, appearing {count} times."
 
     if intent == "correlation":
         if len(numeric_cols) >= 2:
@@ -979,7 +1020,10 @@ def ml_chat_answer(df, question):
             np.fill_diagonal(corr.values, 0)
             pair = corr.stack().idxmax()
             score = corr.stack().max()
-            return f"The strongest relationship is between {pair[0]} and {pair[1]} with correlation {score:.2f}."
+            return (
+                f"The strongest relationship is between {pair[0]} and "
+                f"{pair[1]} with correlation {score:.2f}."
+            )
         return "Not enough numeric columns to calculate correlation."
 
     if intent == "anomaly":
@@ -987,11 +1031,14 @@ def ml_chat_answer(df, question):
         return " ".join(anomalies)
 
     if intent == "recommendation":
-        return "Focus on improving weak-performing areas, reducing anomalies, and analyzing highly correlated columns."
+        return (
+            "Focus on improving weak-performing areas, reducing anomalies, "
+            "and analyzing highly correlated columns."
+        )
 
     if intent == "trend":
-        if numeric_cols:
-            col = numeric_cols[0]
+        col = find_numeric_column()
+        if col:
             first = df[col].iloc[0]
             last = df[col].iloc[-1]
 
@@ -1006,8 +1053,11 @@ def ml_chat_answer(df, question):
         prediction = prediction_data(df)
         return f"The predicted next value is {prediction['next_value']}."
 
-    return "I can answer questions about summary, rows, columns, average, maximum, minimum, correlation, anomaly, trend, prediction, and recommendation."
+    if intent == "insight":
+        insights, recommendations = generate_insights(df)
+        return " ".join(insights[:3])
 
+    return None
 
 def get_simulator_base(df):
     numeric_df = df.copy()
