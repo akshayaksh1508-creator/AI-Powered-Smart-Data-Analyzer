@@ -179,7 +179,7 @@ def chat():
         })
 
     if latest_df is not None:
-        ds_answer = dataset_answer(latest_df, question)
+        ds_answer = ml_chat_answer(latest_df, question)
 
         if ds_answer:
             return jsonify({
