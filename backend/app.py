@@ -14,20 +14,183 @@ chatbot_model = joblib.load("chatbot_model.pkl")
 import os
  
 from dotenv import load_dotenv
-
+from sklearn.metrics.pairwise import cosine_similarity
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 ENV_PATH = BASE_DIR / ".env"
 
 load_dotenv(dotenv_path=ENV_PATH)
+vectorizer = joblib.load(
+    "vectorizer.pkl"
+)
+
+chat_vectors = joblib.load(
+    "chat_vectors.pkl"
+)
+
+chat_answers = joblib.load(
+    "chat_answers.pkl"
+)
+def is_greeting(text):
+    greetings = [
+        "hi",
+        "hello",
+        "hey",
+        "good morning",
+        "good evening"
+    ]
+
+    return text.lower().strip() in greetings
+
+def answer_chatbot(question):
+    q = question.lower()
+
+    q_vector = vectorizer.transform([q])
+
+    similarity = cosine_similarity(
+        q_vector,
+        chat_vectors
+    )
+
+    best_match = similarity.argmax()
+
+    score = similarity[0][best_match]
+
+    if score > 0.25:
+        return chat_answers[best_match]
+
+    return "Sorry, I could not understand that."
+def is_greeting(question):
+    q = question.lower().strip()
+
+    greetings = [
+        "hi",
+        "hello",
+        "hey",
+        "hii",
+        "helo",
+        "good morning",
+        "good afternoon",
+        "good evening",
+        "how are you",
+        "thanks",
+        "thank you"
+    ]
+
+    return q in greetings
 
 
+def dataset_answer(df, question):
+    if df is None:
+        return None
+
+    q = question.lower().strip()
+
+    if is_greeting(q):
+        return None
+
+    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+
+    dataset_words = [
+        "dataset", "data", "rows", "columns",
+        "average", "mean", "highest", "maximum",
+        "lowest", "minimum", "top", "correlation",
+        "relationship"
+    ]
+
+    column_words = [col.lower() for col in df.columns]
+
+    is_dataset_question = (
+        any(word in q for word in dataset_words)
+        or any(col in q for col in column_words)
+    )
+
+    if not is_dataset_question:
+        return None
+
+    if "rows" in q:
+        return f"The dataset contains {df.shape[0]} rows."
+
+    if "columns" in q:
+        return "Columns: " + ", ".join(df.columns)
+
+    if "average" in q or "mean" in q:
+        for col in numeric_cols:
+            if col.lower() in q:
+                return f"The average {col} is {df[col].mean():.2f}."
+
+        if numeric_cols:
+            col = numeric_cols[0]
+            return f"The average {col} is {df[col].mean():.2f}."
+
+    if "highest" in q or "maximum" in q:
+        for col in numeric_cols:
+            if col.lower() in q:
+                return f"The highest {col} is {df[col].max():.2f}."
+
+        if numeric_cols:
+            col = numeric_cols[0]
+            return f"The highest {col} is {df[col].max():.2f}."
+
+    if "lowest" in q or "minimum" in q:
+        for col in numeric_cols:
+            if col.lower() in q:
+                return f"The lowest {col} is {df[col].min():.2f}."
+
+        if numeric_cols:
+            col = numeric_cols[0]
+            return f"The lowest {col} is {df[col].min():.2f}."
+
+    if "top" in q or "most" in q:
+        categorical_cols = df.select_dtypes(include=["object", "string"]).columns.tolist()
+
+        for col in categorical_cols:
+            if col.lower() in q:
+                value = df[col].value_counts().idxmax()
+                count = df[col].value_counts().max()
+                return f"The most common value in {col} is {value}, appearing {count} times."
+
+    if "correlation" in q or "relationship" in q:
+        if len(numeric_cols) >= 2:
+            corr = df[numeric_cols].corr().abs()
+            np.fill_diagonal(corr.values, 0)
+
+            pair = corr.stack().idxmax()
+            score = corr.stack().max()
+
+            return f"The strongest relationship is between {pair[0]} and {pair[1]} with correlation {score:.2f}."
+
+        return "Not enough numeric columns to calculate correlation."
+
+    return None
 
 
+@app.route("/chat", methods=["POST"])
+def chat():
+    global latest_df
 
+    data = request.get_json()
+    question = data.get("question", "").strip()
 
+    if question == "":
+        return jsonify({
+            "answer": "Please enter a question."
+        })
 
+    if latest_df is not None:
+        ds_answer = dataset_answer(latest_df, question)
+
+        if ds_answer:
+            return jsonify({
+                "answer": ds_answer
+            })
+
+    reply = answer_chatbot(question)
+
+    return jsonify({
+        "answer": reply
+    })
 def clean_data(df):
     cleaned_df = df.copy()
 
@@ -592,7 +755,7 @@ def analyze():
         categorical_cols = cleaned_df.select_dtypes(
     include=["object", "string"]
 ).columns.tolist()
-
+        
         domain = detect_domain(cleaned_df)
         current_memory = create_dataset_memory(cleaned_df, file.filename, domain)
         memory_insight = compare_with_previous_memory(current_memory)
@@ -844,34 +1007,7 @@ def ml_chat_answer(df, question):
         return f"The predicted next value is {prediction['next_value']}."
 
     return "I can answer questions about summary, rows, columns, average, maximum, minimum, correlation, anomaly, trend, prediction, and recommendation."
-@app.route("/chat", methods=["POST"])
-def chat_with_data():
-    try:
-        global latest_df
 
-        if latest_df is None:
-            return jsonify({
-                "answer": "Please upload and analyze a dataset first."
-            })
-
-        data = request.get_json()
-        question = data.get("question", "")
-
-        if question.strip() == "":
-            return jsonify({
-                "answer": "Please enter a question."
-            })
-
-        answer = ml_chat_answer(latest_df, question)
-
-        return jsonify({
-            "answer": answer
-        })
-
-    except Exception as e:
-        return jsonify({
-            "answer": f"Error: {str(e)}"
-        }), 500
 
 def get_simulator_base(df):
     numeric_df = df.copy()

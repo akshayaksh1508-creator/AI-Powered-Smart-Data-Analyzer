@@ -1,0 +1,118 @@
+[
+    {
+        "file_name": "sales_february.csv",
+        "uploaded_at": "2026-06-01 16:52:41",
+        "rows": 8,
+        "columns": 5,
+        "domain": "Business / Sales",
+        "numeric_summary": {
+            "Sales": {
+                "mean": 17312.5,
+                "min": 14000.0,
+                "max": 22000.0
+            },
+            "Profit": {
+                "mean": 4237.5,
+                "min": 3500.0,
+                "max": 5400.0
+            },
+            "Discount": {
+                "mean": 7.125,
+                "min": 5.0,
+                "max": 10.0
+            },
+            "Customers": {
+                "mean": 211.875,
+                "min": 165.0,
+                "max": 260.0
+            }
+        }
+    },
+    {
+        "file_name": "sales_march_low_profit.csv",
+        "uploaded_at": "2026-06-01 16:55:49",
+        "rows": 8,
+        "columns": 5,
+        "domain": "Business / Sales",
+        "numeric_summary": {
+            "Sales": {
+                "mean": 18000.0,
+                "min": 15000.0,
+                "max": 22500.0
+            },
+            "Profit": {
+                "mean": 3000.0,
+                "min": 2500.0,
+                "max": 3600.0
+            },
+            "Discount": {
+                "mean": 12.75,
+                "min": 11.0,
+                "max": 15.0
+            },
+            "Customers": {
+                "mean": 217.5,
+                "min": 170.0,
+                "max": 265.0
+            }
+        }
+    },
+    {
+        "file_name": "sales_february.csv",
+        "uploaded_at": "2026-06-01 16:56:31",
+        "rows": 8,
+        "columns": 5,
+        "domain": "Business / Sales",
+        "numeric_summary": {
+            "Sales": {
+                "mean": 17312.5,
+                "min": 14000.0,
+                "max": 22000.0
+            },
+            "Profit": {
+                "mean": 4237.5,
+                "min": 3500.0,
+                "max": 5400.0
+            },
+            "Discount": {
+                "mean": 7.125,
+                "min": 5.0,
+                "max": 10.0
+            },
+            "Customers": {
+                "mean": 211.875,
+                "min": 165.0,
+                "max": 260.0
+            }
+        }
+    },
+    {
+        "file_name": "sales_january.csv",
+        "uploaded_at": "2026-06-01 16:57:30",
+        "rows": 8,
+        "columns": 5,
+        "domain": "Business / Sales",
+        "numeric_summary": {
+            "Sales": {
+                "mean": 15500.0,
+                "min": 12000.0,
+                "max": 19000.0
+            },
+            "Profit": {
+                "mean": 3712.5,
+                "min": 3000.0,
+                "max": 4500.0
+            },
+            "Discount": {
+                "mean": 6.75,
+                "min": 5.0,
+                "max": 9.0
+            },
+            "Customers": {
+                "mean": 192.5,
+                "min": 150.0,
+                "max": 230.0
+            }
+        }
+    }
+]

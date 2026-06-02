@@ -1,19 +1,45 @@
-import pandas as pd
 import joblib
 
-from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
 
-df = pd.read_csv("training_data.csv")
+questions = []
+answers = []
 
-model = Pipeline([
-    ("tfidf", TfidfVectorizer(ngram_range=(1, 2))),
-    ("classifier", LogisticRegression(max_iter=2000))
-])
+with open(
+    "dialogs.txt",
+    "r",
+    encoding="utf-8"
+) as file:
+    for line in file:
+        parts = line.strip().split("\t")
 
-model.fit(df["question"], df["intent"])
+        if len(parts) == 2:
+            questions.append(parts[0].lower())
+            answers.append(parts[1])
 
-joblib.dump(model, "chatbot_model.pkl")
+vectorizer = TfidfVectorizer(
+    stop_words="english",
+    max_features=10000
+)
 
-print("Chatbot model trained successfully")
+vectors = vectorizer.fit_transform(
+    questions
+)
+
+joblib.dump(
+    vectorizer,
+    "vectorizer.pkl"
+)
+
+joblib.dump(
+    vectors,
+    "chat_vectors.pkl"
+)
+
+joblib.dump(
+    answers,
+    "chat_answers.pkl"
+)
+
+print("Training complete")
+print("Questions:", len(questions))

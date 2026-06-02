@@ -9,3 +9,4 @@ google-generativeai
 python-dotenv
 gunicorn
 joblib
+python-dotenv
