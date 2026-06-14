@@ -114,7 +114,7 @@ def is_dataset_question(question):
     return False
 
 
-@app.route("/chat", methods=["POST"])
+
 def is_greeting(question):
     q = question.lower().strip()
 
