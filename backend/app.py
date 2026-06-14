@@ -42,79 +42,69 @@ def is_greeting(text):
     ]
 
     return text.lower().strip() in greetings
+
 def answer_chatbot(question):
 
-    question = question.lower()
+    q = question.lower().strip()
 
-    user_vector = vectorizer.transform([question])
+    if is_greeting(q):
+        return "Hello! How can I help you today?"
 
-    similarity = cosine_similarity(user_vector, chat_vectors)
+    q_vector = vectorizer.transform([q])
 
-    best_match = similarity.argmax()      # <-- ADD THIS
+    similarity = cosine_similarity(q_vector, chat_vectors)
+
+    best_match = similarity.argmax()
 
     score = similarity[0][best_match]
 
-    print(score)
-
-    if score > 0.30:
+    if score >= 0.5:
         return chat_answers[best_match]
 
-    return "I'm not sure how to answer that. Could you ask it differently?"
+    return "I'm not sure about that. Could you ask it differently?"
 def is_dataset_question(question):
-    dataset_keywords = [
-        "dataset",
-        "column",
-        "columns",
-        "row",
-        "rows",
-        "average",
-        "mean",
-        "maximum",
-        "minimum",
-        "highest",
-        "lowest",
-        "correlation",
-        "trend",
-        "prediction",
-        "forecast",
-        "recommendation",
-        "summary",
-        "anomaly",
-        "outlier",
-        "total",
-        "median",
-        "standard deviation",
-        "sales",
-        "profit",
-        "population",
-        "density",
-        "growth",
-        "country",
-        "capital",
-        "continent",
-        "top",
-        "highest",
-        "lowest",
-        "largest",
-        "smallest",
-        "mean",
-        "sum",
-        "average",
-        "insight",
-        "recommendation",
-        "forecast"
-        
-    ]
 
     q = question.lower()
 
-    for word in dataset_keywords:
-        if word in q:
-            return True
+    keywords = [
+        "dataset",
+        "data",
+        "summarize",
+        "summary",
+        "describe",
+        "overview",
+        "rows",
+        "columns",
+        "column",
+        "average",
+        "mean",
+        "highest",
+        "maximum",
+        "lowest",
+        "minimum",
+        "correlation",
+        "relationship",
+        "trend",
+        "prediction",
+        "forecast",
+        "anomaly",
+        "outlier",
+        "recommendation",
+        "top",
+        "total",
+        "median",
+        "standard deviation"
+    ]
+
+    if any(word in q for word in keywords):
+        return True
+
+    if latest_df is not None:
+        for col in latest_df.columns:
+            if col.lower() in q:
+                return True
 
     return False
-
-
 
 def is_greeting(question):
     q = question.lower().strip()
@@ -220,28 +210,22 @@ def dataset_answer(df, question):
 
     return None
 
-
 @app.route("/chat", methods=["POST"])
 def chat():
-
     global latest_df
 
     data = request.get_json()
     question = data.get("question", "").strip()
 
     if question == "":
-        return jsonify({
-            "answer": "Please enter a question."
-        })
+        return jsonify({"answer": "Please enter a question."})
 
-    # Dataset questions
-    if latest_df is not None and is_dataset_question(question):
+    if latest_df is not None:
+        ds_answer = ml_chat_answer(latest_df, question)
 
-        return jsonify({
-            "answer": ml_chat_answer(latest_df, question)
-        })
+        if ds_answer is not None:
+            return jsonify({"answer": ds_answer})
 
-    # General chatbot
     return jsonify({
         "answer": answer_chatbot(question)
     })
@@ -998,7 +982,43 @@ def answer_data_question(df, question):
 
     return "Try asking: summary, rows, columns, averages, highest values, correlations, recommendations, or anomalies."
 def ml_chat_answer(df, question):
-    intent = chatbot_model.predict([question])[0]
+    q = question.lower()
+
+    if "summary" in q or "summarize" in q or "overview" in q or "describe" in q:
+        intent = "summary"
+
+    elif "row" in q:
+        intent = "rows"
+
+    elif "column" in q or "field" in q:
+        intent = "columns"
+
+    elif "average" in q or "mean" in q:
+        intent = "average"
+
+    elif "maximum" in q or "highest" in q or "largest" in q:
+        intent = "maximum"
+
+    elif "minimum" in q or "lowest" in q or "smallest" in q:
+        intent = "minimum"
+
+    elif "correlation" in q or "relationship" in q:
+        intent = "correlation"
+
+    elif "trend" in q or "pattern" in q:
+        intent = "trend"
+
+    elif "prediction" in q or "forecast" in q:
+        intent = "prediction"
+
+    elif "anomaly" in q or "outlier" in q or "abnormal" in q:
+        intent = "anomaly"
+
+    elif "recommendation" in q or "suggest" in q or "improve" in q:
+        intent = "recommendation"
+
+    else:
+        intent = None
 
     q = question.lower().strip()
 
