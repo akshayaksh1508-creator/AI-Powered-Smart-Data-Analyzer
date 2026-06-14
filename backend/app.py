@@ -42,23 +42,24 @@ def is_greeting(text):
     ]
 
     return text.lower().strip() in greetings
-
 def answer_chatbot(question):
-    q = question.lower()
 
-    q_vector = vectorizer.transform([q])
+    question = question.lower()
 
-    similarity = cosine_similarity(q_vector, chat_vectors)
+    user_vector = vectorizer.transform([question])
 
-    best = similarity.argmax()
-    score = similarity[0][best]
+    similarity = cosine_similarity(user_vector, chat_vectors)
 
-    print(score)        # For debugging
+    best_match = similarity.argmax()      # <-- ADD THIS
+
+    score = similarity[0][best_match]
+
+    print(score)
 
     if score > 0.30:
-       return chat_answers[best_match]
+        return chat_answers[best_match]
 
-    return "I'm not sure about that, but I'd be happy to help if you ask in another way."
+    return "I'm not sure how to answer that. Could you ask it differently?"
 def is_dataset_question(question):
     dataset_keywords = [
         "dataset",
