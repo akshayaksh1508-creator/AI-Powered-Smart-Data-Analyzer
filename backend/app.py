@@ -55,11 +55,66 @@ def answer_chatbot(question):
 
     print(score)        # For debugging
 
-    if score < 0.35:
-        return "NOT_FOUND"
+    if score > 0.30:
+       return chat_answers[best_match]
 
-    return chat_answers[best]
-    return "Sorry, I could not understand that."
+    return "I'm not sure about that, but I'd be happy to help if you ask in another way."
+def is_dataset_question(question):
+    dataset_keywords = [
+        "dataset",
+        "column",
+        "columns",
+        "row",
+        "rows",
+        "average",
+        "mean",
+        "maximum",
+        "minimum",
+        "highest",
+        "lowest",
+        "correlation",
+        "trend",
+        "prediction",
+        "forecast",
+        "recommendation",
+        "summary",
+        "anomaly",
+        "outlier",
+        "total",
+        "median",
+        "standard deviation",
+        "sales",
+        "profit",
+        "population",
+        "density",
+        "growth",
+        "country",
+        "capital",
+        "continent",
+        "top",
+        "highest",
+        "lowest",
+        "largest",
+        "smallest",
+        "mean",
+        "sum",
+        "average",
+        "insight",
+        "recommendation",
+        "forecast"
+        
+    ]
+
+    q = question.lower()
+
+    for word in dataset_keywords:
+        if word in q:
+            return True
+
+    return False
+
+
+@app.route("/chat", methods=["POST"])
 def is_greeting(question):
     q = question.lower().strip()
 
@@ -167,28 +222,27 @@ def dataset_answer(df, question):
 
 @app.route("/chat", methods=["POST"])
 def chat():
+
     global latest_df
 
     data = request.get_json()
     question = data.get("question", "").strip()
 
     if question == "":
-        return jsonify({"answer": "Please enter a question."})
+        return jsonify({
+            "answer": "Please enter a question."
+        })
 
-    # First try chatbot
-    chat_reply = answer_chatbot(question)
+    # Dataset questions
+    if latest_df is not None and is_dataset_question(question):
 
-    # If chatbot found a good answer, use it
-    if chat_reply != "NOT_FOUND":
-        return jsonify({"answer": chat_reply})
+        return jsonify({
+            "answer": ml_chat_answer(latest_df, question)
+        })
 
-    # Otherwise try dataset
-    if latest_df is not None:
-        ds_reply = ml_chat_answer(latest_df, question)
-        return jsonify({"answer": ds_reply})
-
+    # General chatbot
     return jsonify({
-        "answer": "Please upload a dataset or ask another question."
+        "answer": answer_chatbot(question)
     })
 def clean_data(df):
     cleaned_df = df.copy()
@@ -957,18 +1011,19 @@ def ml_chat_answer(df, question):
         return numeric_cols[0] if numeric_cols else None
 
     if intent == "summary":
+
         return (
-            f"The uploaded dataset contains {df.shape[0]} rows and "
-            f"{df.shape[1]} columns. "
-            f"Detected domain is {detect_domain(df)}. "
-            f"Columns are: {', '.join(df.columns)}."
+            f"The uploaded dataset contains "
+            f"{df.shape[0]} rows and {df.shape[1]} columns. "
+            f"It belongs to the {detect_domain(df)} domain.\n\n"
+            f"Columns include: {', '.join(df.columns)}."
         )
 
     if intent == "rows":
         return f"The dataset contains {df.shape[0]} rows."
 
     if intent == "columns":
-        return "Columns: " + ", ".join(df.columns)
+        return f"The dataset contains {len(df.columns)} columns:\n\n" + ", ".join(df.columns)
 
     if intent == "average":
         col = find_numeric_column()
@@ -976,14 +1031,26 @@ def ml_chat_answer(df, question):
             return f"The average value of {col} is {df[col].mean():.2f}."
 
     if intent == "maximum":
-        col = find_numeric_column()
-        if col:
-            return f"The highest value of {col} is {df[col].max():.2f}."
+
+        if numeric_cols:
+
+            col = numeric_cols[0]
+
+            return (
+                f"The maximum value in "
+                f"{col} is {df[col].max():,.2f}."
+            )
 
     if intent == "minimum":
-        col = find_numeric_column()
-        if col:
-            return f"The lowest value of {col} is {df[col].min():.2f}."
+
+        if numeric_cols:
+
+            col = numeric_cols[0]
+
+            return (
+                f"The minimum value in "
+                f"{col} is {df[col].min():,.2f}."
+            )
 
     if intent == "total":
         col = find_numeric_column()
@@ -1036,18 +1103,22 @@ def ml_chat_answer(df, question):
         )
 
     if intent == "trend":
-        col = find_numeric_column()
-        if col:
-            first = df[col].iloc[0]
-            last = df[col].iloc[-1]
 
-            if last > first:
+        if numeric_cols:
+
+            col = numeric_cols[0]
+
+            if df[col].iloc[-1] > df[col].iloc[0]:
+
                 return f"{col} shows an increasing trend."
-            elif last < first:
-                return f"{col} shows a decreasing trend."
-            else:
-                return f"{col} appears stable."
 
+            elif df[col].iloc[-1] < df[col].iloc[0]:
+
+                return f"{col} shows a decreasing trend."
+
+            else:
+
+                return f"{col} remains relatively stable."
     if intent == "prediction":
         prediction = prediction_data(df)
         return f"The predicted next value is {prediction['next_value']}."
