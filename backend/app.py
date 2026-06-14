@@ -48,18 +48,17 @@ def answer_chatbot(question):
 
     q_vector = vectorizer.transform([q])
 
-    similarity = cosine_similarity(
-        q_vector,
-        chat_vectors
-    )
+    similarity = cosine_similarity(q_vector, chat_vectors)
 
-    best_match = similarity.argmax()
+    best = similarity.argmax()
+    score = similarity[0][best]
 
-    score = similarity[0][best_match]
+    print(score)        # For debugging
 
-    if score > 0.25:
-        return chat_answers[best_match]
+    if score < 0.35:
+        return "NOT_FOUND"
 
+    return chat_answers[best]
     return "Sorry, I could not understand that."
 def is_greeting(question):
     q = question.lower().strip()
@@ -174,22 +173,22 @@ def chat():
     question = data.get("question", "").strip()
 
     if question == "":
-        return jsonify({
-            "answer": "Please enter a question."
-        })
+        return jsonify({"answer": "Please enter a question."})
 
+    # First try chatbot
+    chat_reply = answer_chatbot(question)
+
+    # If chatbot found a good answer, use it
+    if chat_reply != "NOT_FOUND":
+        return jsonify({"answer": chat_reply})
+
+    # Otherwise try dataset
     if latest_df is not None:
-        ds_answer = ml_chat_answer(latest_df, question)
-
-        if ds_answer:
-            return jsonify({
-                "answer": ds_answer
-            })
-
-    reply = answer_chatbot(question)
+        ds_reply = ml_chat_answer(latest_df, question)
+        return jsonify({"answer": ds_reply})
 
     return jsonify({
-        "answer": reply
+        "answer": "Please upload a dataset or ask another question."
     })
 def clean_data(df):
     cleaned_df = df.copy()
